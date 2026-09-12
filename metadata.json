@@ -1,0 +1,6 @@
+{
+  "name": "Musam",
+  "description": "Smart Weather and AQI (Air Quality Index) forecasting application providing real-time weather alerts, hourly/daily forecasts, AQI health advisories, and radar maps.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

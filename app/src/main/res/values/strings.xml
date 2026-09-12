@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Musam</string>
+    <string name="tagline">Weather &amp; AQI Intelligence</string>
+    <string name="nav_weather">Weather</string>
+    <string name="nav_aqi">AQI</string>
+    <string name="nav_radar">Radar</string>
+    <string name="nav_alerts">Alerts</string>
+    <string name="nav_cities">Cities</string>
+    
+    <string name="search_placeholder">Search city (e.g., Delhi, Mumbai)…</string>
+    <string name="current_location">Current Location</string>
+    <string name="refresh">Refresh</string>
+    <string name="unit_celsius">°C</string>
+    <string name="unit_fahrenheit">°F</string>
+    
+    <string name="air_quality_title">Air Quality Index</string>
+    <string name="health_advisory">Health Advisory</string>
+    <string name="hourly_forecast">Hourly Forecast</string>
+    <string name="weekly_forecast">7-Day Forecast</string>
+    <string name="weather_details">Atmospheric Conditions</string>
+    <string name="uv_index">UV Index</string>
+    <string name="humidity">Humidity</string>
+    <string name="wind_speed">Wind</string>
+    <string name="pressure">Pressure</string>
+    <string name="visibility">Visibility</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="sunset">Sunset</string>
+    <string name="dew_point">Dew Point</string>
+    <string name="cloud_cover">Cloud Cover</string>
+
+    <string name="aqi_good">Good</string>
+    <string name="aqi_moderate">Moderate</string>
+    <string name="aqi_unhealthy_sensitive">Sensitive</string>
+    <string name="aqi_unhealthy">Poor</string>
+    <string name="aqi_very_unhealthy">Very Poor</string>
+    <string name="aqi_severe">Severe</string>
+
+    <string name="pollutants_breakdown">Pollutant Concentrations</string>
+    <string name="pm25">PM2.5</string>
+    <string name="pm10">PM10</string>
+    <string name="no2">NO₂</string>
+    <string name="so2">SO₂</string>
+    <string name="co">CO</string>
+    <string name="o3">O₃</string>
+
+    <string name="radar_title">Weather &amp; AQI Radar</string>
+    <string name="radar_satellite_layer">Satellite</string>
+    <string name="radar_precipitation_layer">Doppler Rain</string>
+    <string name="radar_wind_layer">Wind Streams</string>
+    <string name="radar_aqi_layer">AQI Heatmap</string>
+
+    <string name="alerts_title">IMD Weather Warnings</string>
+    <string name="saved_cities_title">Manage Locations</string>
+    <string name="add_city">Add Location</string>
+</resources>

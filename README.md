@@ -1,7 +1,24 @@
-# SIH2026-Musam
+# Musam - Weather & Air Quality Index (AQI)
 
-A weather and AQI application.
+A native Android application built with **Kotlin** and **Jetpack Compose** (Material Design 3), inspired by the India Meteorological Department (IMD) Mausam system and Smart India Hackathon environmental intelligence initiatives.
 
-## 🚀 Live Project
+## Features
 
-(https://id-preview--d134bf0d-cee0-4f99-9644-7d0527335db3.lovable.app/?__lovable_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9%2EeyJ1c2VyX2lkIjoiRU1RU2ZYaUFvdFFRUEtHUG9FdHhvekpDZlN3MSIsInByb2plY3RfaWQiOiJkMTM0YmYwZC1jZWUwLTRmOTktOTY0NC03ZDA1MjczMzVkYjMiLCJhY2Nlc3NfdHlwZSI6InByb2plY3QiLCJpc3MiOiJsb3ZhYmxlLWFwaSIsInN1YiI6ImQxMzRiZjBkLWNlZTAtNGY5OS05NjQ0LTdkMDUyNzMzNWRiMyIsImF1ZCI6WyJsb3ZhYmxlLWFwcCJdLCJleHAiOjE3ODkzMDY4NzQsIm5iZiI6MTc4OTIyMDQ3NCwiaWF0IjoxNzg5MjIwNDc0fQ%2Ebtv_FtOza74TSu_kBPSOkt5TPD3Zq8cYCea11zp4ddrF7FpDlNFrCWMomUbBRN04KnyNx3VKzTQd5V7fkQYR6Lrg_LkTXfD1n5_RGbEzLqfOxaKuSoYrA0N6vrcFJV7pba2oTLx2LMVKWrzjUPrv40bRQ6DpH3JLqeiVP_MgHzYOziYUdJCsp6JH5Xq-TMnIjFbjvyVVjwGhwzNv9kS2pGJ1cBIIZKJcF9ZS-01fNuNJU1kpLTtyWN6QFvXc--24LbRB695P6UGSsenRtTbmArT4bdaZg_Ym_b84ZSGeK-sZy_DzRKOuUhWgySbzknQs4Ejb5A15WL4GyIFODyRquDDT96h4HycohiE30cHC2UA3wS2gjxooQJyxMve7zL5j7QmLKMlAO1dUXi6I2015U5o2NMnPKjHZL0n17fE7h69xT0PhQdv2X-RjR6N-AhUKyJ04nLEHJFU9w1mbgm1OxfgUq6impj1TNH_Qdrt2sEjscCIc8adhwZZy2wiajox2HcOEsDwdicQdzwZpKxGu6l1yfS0A6xjm6Qvhg2U11BM9XLdNNC2UDQVjTnil1RmMRAWguQl3jx6E1Tu0fY4eamGmAexigIrmQf92UyNs7HMjVjlx_QxGiAFS9K-2-J0uq6VY70nPqpZrp2vPH3264UcCfUo1SCJ0fUPwcNq4N3Y)
+- **Live Weather Dashboard**: Real-time temperature, condition summaries, feels-like temperature, dynamic weather hero artwork, and high/low daily forecasts.
+- **Air Quality Index (AQI)**: Central Pollution Control Board (CPCB) NAQI scale circular arc gauge with real-time pollutant tracking (PM2.5, PM10, NO₂, SO₂, CO, O₃) and health advisories.
+- **Health & Citizen Advisories**: Actionable recommendations for N95 masks, outdoor workouts, HEPA air purifiers, and indoor ventilation.
+- **24-Hour Forecast**: Hourly forecast cards featuring precipitation probability, wind velocity, and condition icons.
+- **7-Day Outlook**: Weekly forecast with visual temperature range indicators and rain chance.
+- **Atmospheric Conditions**: UV index, wind speed/direction, humidity, barometric pressure, visibility, and solar schedule (sunrise/sunset).
+- **Interactive Radar & Satellite Maps**: Interactive Canvas map with layers for Doppler Rain, Satellite Cloud Cover, Wind Stream vectors, and AQI Smog Heatmaps, with a 5-step animation timeline player.
+- **IMD Early Warnings**: Color-coded alert badges (Red, Orange, Yellow, Green) with official advisories and emergency helplines.
+- **City Directory**: Multi-city management with quick search, live temperature/AQI chips, and custom location addition.
+
+## Tech Stack
+
+- **Framework**: Jetpack Compose, Material 3
+- **Language**: Kotlin 2.2.10
+- **Build System**: Gradle 9.3.1 (Kotlin DSL), Android Gradle Plugin 9.1.1
+- **Architecture**: MVVM with Kotlin Coroutines and StateFlow
+- **Minimum SDK**: Android API 26 (Oreo)
+- **Target SDK**: Android API 36

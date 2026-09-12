@@ -3,6 +3,7 @@ package com.example.musam.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musam.data.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -13,6 +14,8 @@ class WeatherViewModel(
 
     val cities = repository.cities
     val selectedCity = repository.selectedCity
+    val isLoading = repository.isLoading
+    val errorMessage = repository.errorMessage
 
     private val _isCelsius = MutableStateFlow(true)
     val isCelsius: StateFlow<Boolean> = _isCelsius.asStateFlow()
@@ -23,6 +26,15 @@ class WeatherViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private val _searchResults = MutableStateFlow<List<CityLocation>>(emptyList())
+    val searchResults: StateFlow<List<CityLocation>> = _searchResults.asStateFlow()
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
+
+    private val _locationPermissionDenied = MutableStateFlow(false)
+    val locationPermissionDenied: StateFlow<Boolean> = _locationPermissionDenied.asStateFlow()
+
     private val _selectedRadarLayer = MutableStateFlow(RadarLayer.PRECIPITATION)
     val selectedRadarLayer: StateFlow<RadarLayer> = _selectedRadarLayer.asStateFlow()
 
@@ -31,6 +43,8 @@ class WeatherViewModel(
 
     private val _isRadarPlaying = MutableStateFlow(false)
     val isRadarPlaying: StateFlow<Boolean> = _isRadarPlaying.asStateFlow()
+
+    private var searchJob: Job? = null
 
     val currentAqi: StateFlow<AqiData> = selectedCity.map { city ->
         repository.getAqiData(city)
@@ -53,6 +67,11 @@ class WeatherViewModel(
     }.stateIn(viewModelScope, SharingStarted.Eagerly, repository.getAlerts(repository.selectedCity.value))
 
     init {
+        // Initial live weather fetch for starting city
+        viewModelScope.launch {
+            repository.loadWeatherForCity(repository.selectedCity.value)
+        }
+
         // Timeline playback loop
         viewModelScope.launch {
             while (true) {
@@ -79,6 +98,9 @@ class WeatherViewModel(
 
     fun selectCity(city: CityLocation) {
         repository.selectCity(city)
+        viewModelScope.launch {
+            repository.loadWeatherForCity(city)
+        }
     }
 
     fun toggleFavorite(cityId: String) {
@@ -87,13 +109,58 @@ class WeatherViewModel(
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+        searchJob?.cancel()
+
+        if (query.trim().length >= 2) {
+            searchJob = viewModelScope.launch {
+                delay(400) // Debounce typing
+                _isSearching.value = true
+                val results = repository.searchCitiesOnline(query.trim())
+                _searchResults.value = results
+                _isSearching.value = false
+            }
+        } else {
+            _searchResults.value = emptyList()
+            _isSearching.value = false
+        }
     }
 
     fun addCity(name: String) {
         if (name.isNotBlank()) {
-            repository.addCity(name.trim())
+            val newCity = repository.addCity(name.trim())
             _searchQuery.value = ""
+            _searchResults.value = emptyList()
+            viewModelScope.launch {
+                repository.loadWeatherForCity(newCity)
+            }
         }
+    }
+
+    fun addSelectedSearchResult(city: CityLocation) {
+        val existing = cities.value.find { it.name.equals(city.name, ignoreCase = true) }
+        val target = existing ?: repository.addCity(city.name, city.state, city.lat, city.lon)
+        selectCity(target)
+        _searchQuery.value = ""
+        _searchResults.value = emptyList()
+    }
+
+    fun onGpsLocationReceived(lat: Double, lon: Double) {
+        _locationPermissionDenied.value = false
+        viewModelScope.launch {
+            repository.setLocationFromGps(lat, lon)
+        }
+    }
+
+    fun onLocationPermissionDenied() {
+        _locationPermissionDenied.value = true
+    }
+
+    fun dismissLocationDeniedNotice() {
+        _locationPermissionDenied.value = false
+    }
+
+    fun clearError() {
+        repository.clearError()
     }
 
     fun setRadarLayer(layer: RadarLayer) {
@@ -111,14 +178,7 @@ class WeatherViewModel(
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            delay(700)
-            // Re-trigger by copying current city with minor random perturbation
-            val current = repository.selectedCity.value
-            val refreshed = current.copy(
-                tempC = ((current.tempC * 10).toInt() + (-3..3).random()) / 10.0,
-                aqi = (current.aqi + (-5..5).random()).coerceAtLeast(15)
-            )
-            repository.selectCity(refreshed)
+            repository.loadWeatherForCity(repository.selectedCity.value)
             _isRefreshing.value = false
         }
     }

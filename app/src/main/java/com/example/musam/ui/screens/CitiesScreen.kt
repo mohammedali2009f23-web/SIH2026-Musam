@@ -1,5 +1,8 @@
 package com.example.musam.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,11 +33,16 @@ fun CitiesScreen(
     currentCity: CityLocation,
     allCities: List<CityLocation>,
     searchQuery: String,
+    searchResults: List<CityLocation> = emptyList(),
+    isSearching: Boolean = false,
+    isLocationPermissionDenied: Boolean = false,
     onSearchChange: (String) -> Unit,
     onAddCity: (String) -> Unit,
     onSelectCity: (CityLocation) -> Unit,
+    onSelectSearchResult: (CityLocation) -> Unit = {},
     onToggleFavorite: (String) -> Unit,
     formatTemp: (Double) -> String,
+    onRequestLocation: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var newCityInput by remember { mutableStateOf("") }
@@ -64,6 +72,42 @@ fun CitiesScreen(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Manual search notice if location was denied
+        if (isLocationPermissionDenied) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Location access disabled. Search any city manually below.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(
+                        onClick = onRequestLocation,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text("Enable GPS", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+        }
+
         // Search Bar with Add City action
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -73,7 +117,7 @@ fun CitiesScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = { Text("Search city (Delhi, Mumbai, etc.)") },
+                placeholder = { Text("Search city (Delhi, Mumbai, London...)") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
@@ -108,12 +152,86 @@ fun CitiesScreen(
             }
         }
 
+        if (isSearching) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.weight(1f)
         ) {
+            // Live Search Results from OpenWeather API Geocoding
+            if (searchResults.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "OpenWeather Results (${searchResults.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+                items(searchResults, key = { it.id }) { result ->
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { onSelectSearchResult(result) }
+                            .testTag("search_result_${result.id}")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = result.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${result.state} • ${result.country}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            FilledTonalButton(
+                                onClick = { onSelectSearchResult(result) },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text("Select & View", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+            }
+
             if (favoriteCities.isNotEmpty()) {
                 item {
                     Text(
@@ -138,7 +256,7 @@ fun CitiesScreen(
             if (otherCities.isNotEmpty()) {
                 item {
                     Text(
-                        text = "All Locations (${otherCities.size})",
+                        text = "Saved Locations (${otherCities.size})",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -169,7 +287,7 @@ fun CitiesScreen(
             text = {
                 Column {
                     Text(
-                        "Enter the name of a city or region to monitor its real-time weather and air quality:",
+                        "Enter the name of a city to fetch live OpenWeather conditions, air pollution indices, and forecasts:",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -177,7 +295,7 @@ fun CitiesScreen(
                     OutlinedTextField(
                         value = newCityInput,
                         onValueChange = { newCityInput = it },
-                        placeholder = { Text("e.g., Lucknow, Varanasi, Chandigarh") },
+                        placeholder = { Text("e.g., Lucknow, Chandigarh, Pune") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )

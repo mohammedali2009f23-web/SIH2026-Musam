@@ -1,0 +1,12 @@
+{
+  "name": "mausam-weather-backend",
+  "version": "1.0.0",
+  "description": "Secure server-side API proxy layer for Mausam weather and AQI application",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "keywords": ["weather", "aqi", "openweather", "mausam"],
+  "author": "Mausam Team",
+  "license": "MIT"
+}

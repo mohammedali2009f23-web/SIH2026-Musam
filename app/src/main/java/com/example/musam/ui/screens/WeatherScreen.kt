@@ -1,14 +1,18 @@
 package com.example.musam.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,9 +38,17 @@ fun WeatherScreen(
     dailyForecasts: List<DailyForecast>,
     atmosphere: AtmosphereDetails,
     alerts: List<WeatherAlert>,
+    isLoading: Boolean,
+    errorMessage: String?,
+    locationPermissionDenied: Boolean,
     formatTemp: (Double) -> String,
     onNavigateToAqi: () -> Unit,
     onNavigateToAlerts: () -> Unit,
+    onRetry: () -> Unit,
+    onDismissError: () -> Unit,
+    onDismissLocationDenied: () -> Unit,
+    onOpenSearch: () -> Unit,
+    onRequestLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -47,6 +59,143 @@ fun WeatherScreen(
             .verticalScroll(scrollState)
             .testTag("weather_screen")
     ) {
+        // Subtle top loading indicator
+        AnimatedVisibility(visible = isLoading, enter = fadeIn(), exit = fadeOut()) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .testTag("weather_loading_indicator"),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            )
+        }
+
+        // Error Banner if API call failed
+        if (errorMessage != null) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .testTag("api_error_banner")
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudOff,
+                        contentDescription = "API Error",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Connection issue",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = errorMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
+                            maxLines = 2
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilledTonalButton(
+                        onClick = onRetry,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.testTag("retry_button")
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Retry", modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Retry", style = MaterialTheme.typography.labelSmall)
+                    }
+                    IconButton(onClick = onDismissError) {
+                        Icon(Icons.Default.Close, contentDescription = "Dismiss error", tint = MaterialTheme.colorScheme.onErrorContainer)
+                    }
+                }
+            }
+        }
+
+        // Location Permission Denied Advice Banner
+        if (locationPermissionDenied) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .testTag("location_permission_denied_banner")
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOff,
+                            contentDescription = "Location Off",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Location Permission Denied",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        IconButton(
+                            onClick = onDismissLocationDenied,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(18.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Viewing ${city.name}. You can search any city manually or grant location access for automatic local weather and AQI.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = onOpenSearch,
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.weight(1f).testTag("manual_city_search_btn")
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Search City", style = MaterialTheme.typography.labelSmall)
+                        }
+                        OutlinedButton(
+                            onClick = onRequestLocation,
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.weight(1f).testTag("grant_location_btn")
+                        ) {
+                            Icon(Icons.Default.MyLocation, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Enable GPS", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+        }
+
         // Hero Weather Banner
         WeatherHeroSection(
             city = city,
@@ -88,11 +237,16 @@ fun WeatherScreen(
                             color = primaryAlert.severity.color
                         )
                         Text(
-                            text = "Tap to view IMD safety guidelines",
+                            text = "Tap to view safety guidelines & full bulletin",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = primaryAlert.severity.color
+                    )
                 }
             }
         }
@@ -146,7 +300,7 @@ private fun WeatherHeroSection(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         modifier = modifier
             .fillMaxWidth()
-            .height(230.dp)
+            .height(245.dp)
             .testTag("weather_hero_card")
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -166,7 +320,7 @@ private fun WeatherHeroSection(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Black.copy(alpha = 0.35f),
-                                Color.Black.copy(alpha = 0.72f)
+                                Color.Black.copy(alpha = 0.76f)
                             )
                         )
                     )
@@ -179,7 +333,7 @@ private fun WeatherHeroSection(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top Row: Condition Chip
+                // Top Row: Condition Chip & Sunrise/Sunset
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -187,22 +341,89 @@ private fun WeatherHeroSection(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = Color.White.copy(alpha = 0.22f)
+                        color = Color.White.copy(alpha = 0.24f)
                     ) {
-                        Text(
-                            text = city.condition,
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = city.condition,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    // Feels like & Sunrise/Sunset
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color.Black.copy(alpha = 0.28f)
+                        ) {
+                            Text(
+                                text = "Feels like ${formatTemp(city.feelsLikeC)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.95f),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Middle Quick Stats: Sunrise, Sunset, Humidity
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.WbTwilight,
+                            contentDescription = "Sunrise",
+                            tint = Color(0xFFFFD166),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = city.sunrise,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.9f)
                         )
                     }
 
-                    // Feels like
-                    Text(
-                        text = "Feels like ${formatTemp(city.tempC + 1.2)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Bedtime,
+                            contentDescription = "Sunset",
+                            tint = Color(0xFFF4A261),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = city.sunset,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.WaterDrop,
+                            contentDescription = "Humidity",
+                            tint = Color(0xFF64B5F6),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${city.humidity}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
                 }
 
                 // Bottom Row: Large Temperature & Details
@@ -214,12 +435,12 @@ private fun WeatherHeroSection(
                     Column {
                         Text(
                             text = formatTemp(city.tempC),
-                            style = MaterialTheme.typography.displayLarge.copy(fontSize = 62.sp),
+                            style = MaterialTheme.typography.displayLarge.copy(fontSize = 58.sp),
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
                         )
                         Text(
-                            text = "H: ${formatTemp(city.tempC + 3.5)}  •  L: ${formatTemp(city.tempC - 4.5)}",
+                            text = "H: ${formatTemp(city.tempMaxC)}  •  L: ${formatTemp(city.tempMinC)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.85f)
                         )
@@ -236,7 +457,7 @@ private fun WeatherHeroSection(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Live Conditions",
+                            text = "OpenWeather Live",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.8f)
                         )

@@ -4,19 +4,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class WeatherRepository {
+class WeatherRepository(
+    private val apiClient: WeatherApiClient = WeatherApiClient()
+) {
 
     private val initialCities = listOf(
-        CityLocation("delhi", "New Delhi", "Delhi NCR", "India", 28.6139, 77.2090, isFavorite = true, isCurrent = true, 31.4, "Hazy Sunshine", 188),
-        CityLocation("mumbai", "Mumbai", "Maharashtra", "India", 19.0760, 72.8777, isFavorite = true, isCurrent = false, 29.8, "Scattered Showers", 74),
-        CityLocation("bengaluru", "Bengaluru", "Karnataka", "India", 12.9716, 77.5946, isFavorite = true, isCurrent = false, 24.2, "Partly Cloudy", 42),
-        CityLocation("kolkata", "Kolkata", "West Bengal", "India", 22.5726, 88.3639, isFavorite = false, isCurrent = false, 32.0, "Humid Thunderstorm", 112),
-        CityLocation("srinagar", "Srinagar", "Jammu & Kashmir", "India", 34.0837, 74.7973, isFavorite = true, isCurrent = false, 19.5, "Clear Sky", 32),
-        CityLocation("jaipur", "Jaipur", "Rajasthan", "India", 26.9124, 75.7873, isFavorite = false, isCurrent = false, 34.8, "Sunny & Warm", 145),
-        CityLocation("chennai", "Chennai", "Tamil Nadu", "India", 13.0827, 80.2707, isFavorite = false, isCurrent = false, 30.5, "Breezy & Humid", 68),
-        CityLocation("shimla", "Shimla", "Himachal Pradesh", "India", 31.1048, 77.1734, isFavorite = false, isCurrent = false, 17.2, "Misty Mountain Breeze", 28),
-        CityLocation("hyderabad", "Hyderabad", "Telangana", "India", 17.3850, 78.4867, isFavorite = false, isCurrent = false, 28.4, "Passing Clouds", 86),
-        CityLocation("pune", "Pune", "Maharashtra", "India", 18.5204, 73.8567, isFavorite = false, isCurrent = false, 26.0, "Pleasant Wind", 52)
+        CityLocation("delhi", "New Delhi", "Delhi NCR", "India", 28.6139, 77.2090, isFavorite = true, isCurrent = true, 29.0, "Partly Cloudy", 78, feelsLikeC = 35.0, tempMinC = 28.0, tempMaxC = 34.0, humidity = 75, sunrise = "06:04 AM", sunset = "06:30 PM", iconCode = "03d"),
+        CityLocation("mumbai", "Mumbai", "Maharashtra", "India", 19.0760, 72.8777, isFavorite = true, isCurrent = false, 29.8, "Scattered Showers", 74, feelsLikeC = 34.0, tempMinC = 26.0, tempMaxC = 32.0, humidity = 82, sunrise = "06:25 AM", sunset = "06:45 PM", iconCode = "10d"),
+        CityLocation("bengaluru", "Bengaluru", "Karnataka", "India", 12.9716, 77.5946, isFavorite = true, isCurrent = false, 24.2, "Passing Clouds", 42, feelsLikeC = 25.0, tempMinC = 20.0, tempMaxC = 28.0, humidity = 68, sunrise = "06:08 AM", sunset = "06:23 PM", iconCode = "02d"),
+        CityLocation("kolkata", "Kolkata", "West Bengal", "India", 22.5726, 88.3639, isFavorite = false, isCurrent = false, 32.0, "Humid Thunderstorm", 112, feelsLikeC = 38.0, tempMinC = 27.0, tempMaxC = 35.0, humidity = 88, sunrise = "05:22 AM", sunset = "05:43 PM", iconCode = "11d"),
+        CityLocation("srinagar", "Srinagar", "Jammu & Kashmir", "India", 34.0837, 74.7973, isFavorite = true, isCurrent = false, 19.5, "Clear Sky", 32, feelsLikeC = 19.0, tempMinC = 12.0, tempMaxC = 23.0, humidity = 50, sunrise = "06:14 AM", sunset = "06:48 PM", iconCode = "01d"),
+        CityLocation("jaipur", "Jaipur", "Rajasthan", "India", 26.9124, 75.7873, isFavorite = false, isCurrent = false, 34.8, "Sunny & Warm", 145, feelsLikeC = 37.0, tempMinC = 25.0, tempMaxC = 38.0, humidity = 45, sunrise = "06:12 AM", sunset = "06:38 PM", iconCode = "01d"),
+        CityLocation("chennai", "Chennai", "Tamil Nadu", "India", 13.0827, 80.2707, isFavorite = false, isCurrent = false, 30.5, "Breezy & Humid", 68, feelsLikeC = 36.0, tempMinC = 27.0, tempMaxC = 33.0, humidity = 79, sunrise = "05:58 AM", sunset = "06:12 PM", iconCode = "02d"),
+        CityLocation("shimla", "Shimla", "Himachal Pradesh", "India", 31.1048, 77.1734, isFavorite = false, isCurrent = false, 17.2, "Misty Mountain Breeze", 28, feelsLikeC = 17.0, tempMinC = 12.0, tempMaxC = 21.0, humidity = 60, sunrise = "06:05 AM", sunset = "06:33 PM", iconCode = "50d"),
+        CityLocation("hyderabad", "Hyderabad", "Telangana", "India", 17.3850, 78.4867, isFavorite = false, isCurrent = false, 28.4, "Passing Clouds", 86, feelsLikeC = 30.0, tempMinC = 22.0, tempMaxC = 31.0, humidity = 70, sunrise = "06:06 AM", sunset = "06:24 PM", iconCode = "03d"),
+        CityLocation("pune", "Pune", "Maharashtra", "India", 18.5204, 73.8567, isFavorite = false, isCurrent = false, 26.0, "Pleasant Wind", 52, feelsLikeC = 27.0, tempMinC = 21.0, tempMaxC = 29.0, humidity = 65, sunrise = "06:23 AM", sunset = "06:42 PM", iconCode = "02d")
     )
 
     private val _cities = MutableStateFlow<List<CityLocation>>(initialCities)
@@ -24,6 +26,19 @@ class WeatherRepository {
 
     private val _selectedCity = MutableStateFlow<CityLocation>(initialCities.first())
     val selectedCity: StateFlow<CityLocation> = _selectedCity.asStateFlow()
+
+    private val _isLoading = MutableStateFlow<Boolean>(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // Cached bundle results mapped by city ID
+    private val bundleCache = mutableMapOf<String, WeatherBundleResult>()
+
+    fun clearError() {
+        _errorMessage.value = null
+    }
 
     fun selectCity(city: CityLocation) {
         _selectedCity.value = city
@@ -38,7 +53,7 @@ class WeatherRepository {
         }
     }
 
-    fun addCity(name: String, state: String = "India"): CityLocation {
+    fun addCity(name: String, state: String = "India", lat: Double = 20.0, lon: Double = 78.0): CityLocation {
         val id = name.lowercase().replace(" ", "_") + "_" + System.currentTimeMillis() % 1000
         val baseTemp = (220 + (name.hashCode() % 140).coerceAtLeast(0)) / 10.0
         val baseAqi = (40 + (name.hashCode() % 220).coerceAtLeast(0))
@@ -47,8 +62,8 @@ class WeatherRepository {
             name = name,
             state = state,
             country = "India",
-            lat = 20.0 + (name.hashCode() % 10),
-            lon = 78.0 + (name.hashCode() % 10),
+            lat = lat,
+            lon = lon,
             isFavorite = true,
             isCurrent = false,
             tempC = baseTemp,
@@ -60,7 +75,95 @@ class WeatherRepository {
         return newCity
     }
 
+    suspend fun loadWeatherForCity(city: CityLocation): Boolean {
+        _isLoading.value = true
+        _errorMessage.value = null
+        val result = apiClient.fetchWeatherBundle(city.lat, city.lon)
+        _isLoading.value = false
+
+        return if (result.isSuccess) {
+            val bundle = result.getOrThrow()
+            bundleCache[city.id] = bundle
+
+            // Update city with live values from API
+            val updatedCity = city.copy(
+                tempC = bundle.city.tempC,
+                feelsLikeC = bundle.city.feelsLikeC,
+                tempMinC = bundle.city.tempMinC,
+                tempMaxC = bundle.city.tempMaxC,
+                condition = bundle.city.condition,
+                aqi = bundle.city.aqi,
+                humidity = bundle.city.humidity,
+                sunrise = bundle.city.sunrise,
+                sunset = bundle.city.sunset,
+                iconCode = bundle.city.iconCode
+            )
+
+            _selectedCity.value = updatedCity
+            _cities.value = _cities.value.map { if (it.id == city.id) updatedCity else it }
+            true
+        } else {
+            val err = result.exceptionOrNull()?.message ?: "Failed to connect to weather service"
+            _errorMessage.value = err
+            false
+        }
+    }
+
+    suspend fun setLocationFromGps(lat: Double, lon: Double): CityLocation {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        var resolvedName = "Current Location"
+        var resolvedState = "GPS Location"
+
+        val geoResult = apiClient.reverseGeocode(lat, lon)
+        if (geoResult.isSuccess) {
+            val pair = geoResult.getOrThrow()
+            resolvedName = pair.first
+            resolvedState = pair.second
+        }
+
+        val gpsCity = CityLocation(
+            id = "gps_current_location",
+            name = resolvedName,
+            state = resolvedState,
+            country = "India",
+            lat = lat,
+            lon = lon,
+            isFavorite = true,
+            isCurrent = true,
+            tempC = 28.0,
+            condition = "Locating...",
+            aqi = 60
+        )
+
+        // Remove old GPS city if present, prepend new GPS city
+        val filtered = _cities.value.filter { it.id != "gps_current_location" }
+        _cities.value = listOf(gpsCity) + filtered
+        _selectedCity.value = gpsCity
+
+        loadWeatherForCity(gpsCity)
+        return gpsCity
+    }
+
+    suspend fun searchCitiesOnline(query: String): List<CityLocation> {
+        val result = apiClient.searchCities(query)
+        return if (result.isSuccess) {
+            result.getOrThrow()
+        } else {
+            // Local fallback filter
+            _cities.value.filter {
+                it.name.contains(query, ignoreCase = true) || it.state.contains(query, ignoreCase = true)
+            }
+        }
+    }
+
     fun getAqiData(city: CityLocation): AqiData {
+        val cached = bundleCache[city.id]
+        if (cached != null) {
+            return cached.aqiData
+        }
+
         val aqiValue = city.aqi
         val category = AqiCategory.fromIndex(aqiValue)
         val pm25Val = (aqiValue * 0.45).coerceAtLeast(12.0)
@@ -79,72 +182,47 @@ class WeatherRepository {
             Pollutant("O₃", "Ground-Level Ozone", o3Val, "µg/m³", 100.0, if (o3Val <= 50) "Good" else if (o3Val <= 100) "Moderate" else "High")
         )
 
-        val mask = when (category) {
-            AqiCategory.GOOD, AqiCategory.MODERATE -> "Not required for general public."
-            AqiCategory.SENSITIVE -> "Recommended for children, elderly, and asthmatic patients."
-            AqiCategory.UNHEALTHY -> "N95 / FFP2 mask strongly recommended outdoors."
-            AqiCategory.VERY_UNHEALTHY, AqiCategory.SEVERE -> "N95 particulate respirator mandatory when stepping outside."
-        }
-
-        val outdoor = when (category) {
-            AqiCategory.GOOD -> "Ideal for all outdoor running, jogging, and sports."
-            AqiCategory.MODERATE -> "Comfortable for outdoor workouts, keep hydrated."
-            AqiCategory.SENSITIVE -> "Reduce heavy prolonged outdoor sports in early mornings."
-            AqiCategory.UNHEALTHY -> "Shift physical workouts indoors; avoid peak traffic hours."
-            AqiCategory.VERY_UNHEALTHY -> "Strictly avoid outdoor jogging, running, and heavy physical labor."
-            AqiCategory.SEVERE -> "Do not step outside. Hazardous particulate levels present."
-        }
-
-        val purifier = when (category) {
-            AqiCategory.GOOD, AqiCategory.MODERATE -> "Air purifier optional; natural cross-ventilation encouraged."
-            AqiCategory.SENSITIVE -> "Run HEPA air purifier on low in bedrooms."
-            AqiCategory.UNHEALTHY -> "Operate True HEPA filtration in all active rooms."
-            AqiCategory.VERY_UNHEALTHY, AqiCategory.SEVERE -> "Keep True HEPA air purifier on continuous high performance."
-        }
-
-        val ventilation = when (category) {
-            AqiCategory.GOOD -> "Keep windows open for fresh mountain/breeze air intake."
-            AqiCategory.MODERATE -> "Open windows during afternoon hours with favorable wind."
-            AqiCategory.SENSITIVE -> "Brief ventilation only during midday hours."
-            AqiCategory.UNHEALTHY, AqiCategory.VERY_UNHEALTHY, AqiCategory.SEVERE -> "Seal windows and doors to prevent outdoor particulate ingress."
-        }
-
         return AqiData(
             aqi = aqiValue,
             category = category,
             primaryPollutant = if (pm25Val > 60) "PM2.5" else "PM10",
             healthSummary = category.healthAdvice,
-            maskAdvisory = mask,
-            outdoorAdvisory = outdoor,
-            airPurifierAdvisory = purifier,
-            ventilationAdvisory = ventilation,
+            maskAdvisory = if (aqiValue <= 100) "Not required" else "N95 recommended outdoors",
+            outdoorAdvisory = if (aqiValue <= 100) "Safe for all outdoor activities" else "Limit heavy physical exertion outdoors",
+            airPurifierAdvisory = if (aqiValue <= 100) "Optional" else "Recommended in bedrooms",
+            ventilationAdvisory = if (aqiValue <= 100) "Open windows" else "Keep windows closed",
             pollutants = pollutants
         )
     }
 
     fun getHourlyForecast(city: CityLocation): List<HourlyForecast> {
+        val cached = bundleCache[city.id]
+        if (cached != null && cached.hourlyForecasts.isNotEmpty()) {
+            return cached.hourlyForecasts
+        }
+
         val baseTemp = city.tempC
         return listOf(
-            HourlyForecast("Now", baseTemp, city.condition, 20, 14.0, isNow = true),
-            HourlyForecast("09:00", (baseTemp + 0.8), "Sunny / Bright", 15, 12.0),
-            HourlyForecast("11:00", (baseTemp + 2.1), "Scattered Clouds", 25, 16.0),
-            HourlyForecast("13:00", (baseTemp + 3.4), "Hazy Sunshine", 30, 18.0),
-            HourlyForecast("15:00", (baseTemp + 2.8), "Partly Cloudy", 40, 22.0),
-            HourlyForecast("17:00", (baseTemp + 1.2), "Passing Shower", 65, 20.0),
-            HourlyForecast("19:00", (baseTemp - 1.1), "Cloudy Evening", 35, 14.0),
-            HourlyForecast("21:00", (baseTemp - 2.6), "Clear Night", 10, 11.0),
-            HourlyForecast("23:00", (baseTemp - 3.8), "Cool Breeze", 5, 9.0),
-            HourlyForecast("01:00", (baseTemp - 4.5), "Misty Sky", 10, 8.0),
-            HourlyForecast("03:00", (baseTemp - 5.0), "Misty Night", 15, 7.0),
-            HourlyForecast("05:00", (baseTemp - 4.8), "Dawn Sunrise", 20, 10.0),
-            HourlyForecast("07:00", (baseTemp - 2.0), "Morning Warmth", 15, 12.0)
+            HourlyForecast("Now", baseTemp, city.condition, 20, 14.0, isNow = true, icon = city.iconCode),
+            HourlyForecast("09:00", (baseTemp + 0.8), "Sunny / Bright", 15, 12.0, icon = "01d"),
+            HourlyForecast("11:00", (baseTemp + 2.1), "Scattered Clouds", 25, 16.0, icon = "02d"),
+            HourlyForecast("13:00", (baseTemp + 3.4), "Hazy Sunshine", 30, 18.0, icon = "01d"),
+            HourlyForecast("15:00", (baseTemp + 2.8), "Partly Cloudy", 40, 22.0, icon = "03d"),
+            HourlyForecast("17:00", (baseTemp + 1.2), "Passing Shower", 65, 20.0, icon = "10d"),
+            HourlyForecast("19:00", (baseTemp - 1.1), "Cloudy Evening", 35, 14.0, icon = "04n"),
+            HourlyForecast("21:00", (baseTemp - 2.6), "Clear Night", 10, 11.0, icon = "01n")
         )
     }
 
     fun getDailyForecast(city: CityLocation): List<DailyForecast> {
+        val cached = bundleCache[city.id]
+        if (cached != null && cached.dailyForecasts.isNotEmpty()) {
+            return cached.dailyForecasts
+        }
+
         val baseTemp = city.tempC
         return listOf(
-            DailyForecast("Today", "12 Sep", baseTemp - 5.0, baseTemp + 3.5, city.condition, 35, "Warm afternoon with mild evening clouds"),
+            DailyForecast("Today", "12 Sep", baseTemp - 4.0, baseTemp + 3.5, city.condition, 35, "Warm afternoon with mild evening clouds"),
             DailyForecast("Sat", "13 Sep", baseTemp - 4.5, baseTemp + 4.0, "Partly Cloudy", 20, "Gentle easterly wind with bright sunny intervals"),
             DailyForecast("Sun", "14 Sep", baseTemp - 4.0, baseTemp + 2.8, "Thunderstorm", 75, "Convective monsoon shower expected in afternoon"),
             DailyForecast("Mon", "15 Sep", baseTemp - 5.5, baseTemp + 2.0, "Scattered Showers", 60, "Cloudy skies with intermittent light rain"),
@@ -155,8 +233,13 @@ class WeatherRepository {
     }
 
     fun getAtmosphereDetails(city: CityLocation): AtmosphereDetails {
+        val cached = bundleCache[city.id]
+        if (cached != null) {
+            return cached.atmosphere
+        }
+
         val isRainy = city.condition.contains("Rain") || city.condition.contains("Shower")
-        val humidity = if (isRainy) 84 else 62
+        val humidity = if (isRainy) 84 else city.humidity
         val uv = if (isRainy) 4.2 else 8.4
         return AtmosphereDetails(
             humidityPercent = humidity,
@@ -168,13 +251,18 @@ class WeatherRepository {
             pressureHpa = 1011,
             visibilityKm = if (city.aqi > 150) 3.5 else 9.0,
             dewPointC = (city.tempC - 6.2),
-            sunrise = "05:54 AM",
-            sunset = "06:38 PM",
+            sunrise = city.sunrise,
+            sunset = city.sunset,
             cloudCoverPercent = if (isRainy) 78 else 38
         )
     }
 
     fun getAlerts(city: CityLocation): List<WeatherAlert> {
+        val cached = bundleCache[city.id]
+        if (cached != null && cached.alerts.isNotEmpty()) {
+            return cached.alerts
+        }
+
         val list = mutableListOf<WeatherAlert>()
         if (city.aqi >= 150) {
             list.add(
@@ -182,48 +270,30 @@ class WeatherRepository {
                     id = "aqi_alert_${city.id}",
                     severity = AlertSeverity.ORANGE,
                     headline = "High Air Pollution Advisory for ${city.name}",
-                    description = "Concentration of PM2.5 has breached 90 µg/m³. Atmospheric stagnation and temperature inversion are trapping pollutants near ground level.",
+                    description = "Concentration of PM2.5 has breached safe limits. Stagnant air is trapping pollutants near ground level.",
                     issuedBy = "Central Pollution Control Board (CPCB)",
                     validUntil = "Today, 11:59 PM IST",
                     instructions = listOf(
                         "Wear certified N95 respirators if venturing outdoors.",
                         "Sensitive individuals must avoid strenuous outdoor exercises.",
-                        "Operate indoor air purifiers with HEPA filtration.",
-                        "Report any garbage burning via the CPCB Sameer mobile portal."
+                        "Operate indoor air purifiers with HEPA filtration."
                     )
                 )
             )
         }
-        if (city.tempC > 33.0 || city.condition.contains("Warm")) {
+        if (city.tempC > 34.0 || city.condition.contains("Warm")) {
             list.add(
                 WeatherAlert(
                     id = "heat_alert_${city.id}",
                     severity = AlertSeverity.YELLOW,
                     headline = "High Temperature Watch for ${city.name}",
-                    description = "Maximum daytime temperature is 3°C above normal climatological average. Peak radiant solar heat from 12:00 PM to 3:30 PM.",
+                    description = "Maximum daytime temperature is elevated. Peak radiant solar heat from 12:00 PM to 3:30 PM.",
                     issuedBy = "India Meteorological Department (IMD)",
-                    validUntil = "Tomorrow, 06:00 PM IST",
+                    validUntil = "Today, 06:00 PM IST",
                     instructions = listOf(
                         "Drink adequate water and electrolytes throughout the day.",
                         "Wear light, loose-fitting cotton clothing.",
                         "Use umbrella or wide-brim hat during peak afternoon hours."
-                    )
-                )
-            )
-        }
-        if (city.condition.contains("Showers") || city.condition.contains("Thunderstorm") || city.condition.contains("Rain")) {
-            list.add(
-                WeatherAlert(
-                    id = "rain_alert_${city.id}",
-                    severity = AlertSeverity.YELLOW,
-                    headline = "Thunderstorm & Lightning Warning",
-                    description = "Scattered thunderstorms accompanied by lightning and gusty winds (30-40 kmph) likely over parts of ${city.name} district.",
-                    issuedBy = "IMD Regional Meteorological Centre",
-                    validUntil = "Tonight, 09:00 PM IST",
-                    instructions = listOf(
-                        "Do not take shelter under isolated tall trees during thunderstorm.",
-                        "Unplug sensitive electronic devices during severe lightning.",
-                        "Exercise caution while driving on waterlogged roads."
                     )
                 )
             )

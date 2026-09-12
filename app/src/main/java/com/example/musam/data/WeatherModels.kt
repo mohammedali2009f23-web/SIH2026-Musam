@@ -85,7 +85,8 @@ data class HourlyForecast(
     val condition: String,
     val pop: Int, // Probability of precipitation %
     val windKmh: Double,
-    val isNow: Boolean = false
+    val isNow: Boolean = false,
+    val icon: String = "01d"
 )
 
 data class DailyForecast(
@@ -95,7 +96,8 @@ data class DailyForecast(
     val maxTempC: Double,
     val condition: String,
     val pop: Int,
-    val summary: String
+    val summary: String,
+    val icon: String = "01d"
 )
 
 data class AtmosphereDetails(
@@ -141,7 +143,14 @@ data class CityLocation(
     val isCurrent: Boolean = false,
     val tempC: Double,
     val condition: String,
-    val aqi: Int
+    val aqi: Int,
+    val feelsLikeC: Double = tempC,
+    val tempMinC: Double = tempC - 3.0,
+    val tempMaxC: Double = tempC + 3.0,
+    val humidity: Int = 60,
+    val sunrise: String = "06:00 AM",
+    val sunset: String = "06:30 PM",
+    val iconCode: String = "01d"
 )
 
 enum class RadarLayer(val title: String, val description: String) {
